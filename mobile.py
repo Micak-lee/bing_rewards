@@ -24,10 +24,19 @@ def mobile():
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
     options.add_argument("--disable-blink-features=AutomationControlled")
 
-    driver = webdriver.Edge(
+    edge_driver_path = "D:/bing-rewards/edgedriver_win64/msedgedriver.exe"
+    # 设置 ChromeDriver
+    service = EdgeService(executable_path=edge_driver_path)
+    options.add_argument("--disable-blink-features=AutomationControlled")
+    options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    options.add_experimental_option('useAutomationExtension', False)
+
+    driver = webdriver.Edge(service=service, options=options)
+
+    '''driver = webdriver.Edge(
         service=EdgeService(EdgeChromiumDriverManager().install()),
         options=options
-    )
+    )'''
 
     wait = WebDriverWait(driver, 10)
 

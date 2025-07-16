@@ -2,6 +2,5 @@ import pc
 import mobile
 
 if __name__ == "__main__":
-    pc.pc()
+    # pc.pc()
     mobile.mobile()
-    
