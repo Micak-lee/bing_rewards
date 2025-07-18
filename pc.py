@@ -18,12 +18,8 @@ def pc():
     # 2. 启动 Edge
     options = webdriver.EdgeOptions()
     options.use_chromium = True
-    # 去掉“受自动化软件控制”的提示
-    options.add_experimental_option("excludeSwitches", ["enable-automation"])
-    options.add_experimental_option("useAutomationExtension", False)
-    options.add_argument("--disable-blink-features=AutomationControlled")
 
-    edge_driver_path = "D:/bing-rewards/edgedriver_win64/msedgedriver.exe"
+    edge_driver_path = "edgedriver_win64/msedgedriver.exe"
     # 设置 ChromeDriver
     service = EdgeService(executable_path=edge_driver_path)
     options.add_argument("--disable-blink-features=AutomationControlled")
