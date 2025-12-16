@@ -1,9 +1,5 @@
-Here is the updated **README.md**. It has been rewritten to emphasize the convenience of `main.py` while keeping the critical instructions about the Edge Driver version.
-
----
-
-# Bing Search Automation for Microsoft RewardsA robust
-all-in-one Python automation tool designed to perform daily Bing searches on **PC** and **Mobile** modes automatically. This project helps automate the process of earning Microsoft Rewards points by simulating human-like browsing behavior.
+# Bing Search Automation for Microsoft Rewards
+A robust all-in-one Python automation tool designed to perform daily Bing searches on **PC** and **Mobile** modes automatically. This project helps automate the process of earning Microsoft Rewards points by simulating human-like browsing behavior.
 
 With the new `main.py`, you can complete both desktop and mobile search quotas in a single run.
 
@@ -18,9 +14,12 @@ With the new `main.py`, you can complete both desktop and mobile search quotas i
 * **Python 3.x** installed on your system.
 * **Microsoft Edge** browser installed.
 
-## 📥 Installation & Setup###1. Clone or Download this repositoryDownload the source code to a local folder.
+## 📥 Installation & Setup
+### 1. Clone or Download this repository
+Download the source code to a local folder.
 
-### 2. Install DependenciesOpen your terminal/command prompt and run:
+### 2. Install Dependencies
+Open your terminal/command prompt and run:
 
 ```bash
 pip install selenium
@@ -38,7 +37,8 @@ pip install selenium
 
 > **Note:** If your Edge browser updates automatically in the future, you may need to download the new driver version again if the script stops working.
 
-## 📂 Project StructureEnsure your folder looks like this:
+## 📂 Project Structure
+Ensure your folder looks like this:
 
 ```text
 ├── edgedriver_win64/
@@ -50,7 +50,8 @@ pip install selenium
 
 ```
 
-## 🏃‍♂️ UsageYou only need to run one file. The script will first execute the PC searches, then automatically switch to Mobile emulation.
+## 🏃‍♂️ Usage
+You only need to run one file. The script will first execute the PC searches, then automatically switch to Mobile emulation.
 
 ### Run the full automation:
 ```bash
@@ -62,8 +63,10 @@ python main.py
 * PC only: `python pc.py`
 * Mobile only: `python mobile.py`
 
-## 📝 How it Works1. **PC Phase:** The script launches Edge on desktop mode, scrapes 30 real-time keywords, and performs the searches with random scrolling and pauses.
+## 📝 How it Works
+1. **PC Phase:** The script launches Edge on desktop mode, scrapes 30 real-time keywords, and performs the searches with random scrolling and pauses.
 2. **Mobile Phase:** Once PC searches are done, it relaunches Edge in "iPhone X" emulation mode and repeats the process for mobile points.
 3. **Completion:** The browser closes automatically after all tasks are finished.
 
-## ⚠️ DisclaimerThis script is for educational purposes only. Using automation tools to earn Microsoft Rewards points may violate Microsoft's Terms of Service. Use this tool at your own risk. The author is not responsible for any banned accounts.
+## ⚠️ Disclaimer
+This script is for educational purposes only. Using automation tools to earn Microsoft Rewards points may violate Microsoft's Terms of Service. Use this tool at your own risk. The author is not responsible for any banned accounts.
