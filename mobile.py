@@ -126,7 +126,7 @@ def mobile():
         keywords = get_robust_keywords(driver)
 
         # --- 3. 循环搜索 ---
-        for i in range(1, 31):
+        for i in range(1, 24):
             kw = keywords[i - 1]
 
             try:
