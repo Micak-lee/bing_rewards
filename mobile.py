@@ -9,68 +9,97 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, WebDriverException
 
 
-def get_robust_keywords(driver):
+def get_robust_keywords(driver, target_count):
     """
-    功能：在移动端模式下获取关键词
-    策略：Bing新闻(5秒限时) -> 百度热搜 -> 本地词库
+    功能：在移动端/PC端通用获取关键词
+    修复：使用 JS 抓取替代 Selenium 元素遍历，彻底解决 StaleElementReferenceException
     """
     keywords = []
-    print("正在获取移动端热门搜索内容...")
+    print(f"正在获取搜索任务 (目标: {target_count} 个)...")
 
-    # --- 阶段 1: 尝试从 Bing 新闻获取 (极速模式) ---
+    # --- 阶段 1: 尝试从 Bing 新闻获取 (JS 抓取版) ---
     try:
-        # 临时设置极短超时 (5秒)
-        driver.set_page_load_timeout(5)
+        driver.set_page_load_timeout(10)  # 稍微放宽一点时间
 
         try:
             driver.get("https://www.bing.com/news")
         except:
-            # 移动端页面很重，超时是预期的，直接强制停止加载
             driver.execute_script("window.stop();")
 
-        time.sleep(1)  # 给DOM一点渲染时间
+        time.sleep(1.5)  # 等待 JS 渲染文本
 
-        # 移动端结构复杂，直接抓取所有可见的链接文本
-        elements = driver.find_elements(By.TAG_NAME, "a")
+        # [核心修复] 使用 JavaScript 一次性提取所有 a 标签文本
+        # 这避免了在 Python 循环中页面刷新导致的 "Stale Element" 错误
+        raw_texts = driver.execute_script("""
+            var texts = [];
+            var links = document.getElementsByTagName("a");
+            for (var i = 0; i < links.length; i++) {
+                var t = links[i].innerText || links[i].textContent;
+                if (t && t.length > 4) {
+                    texts.push(t);
+                }
+            }
+            return texts;
+        """)
 
-        for e in elements:
-            txt = e.text.strip()
-            # 过滤逻辑：去掉太短的、功能性按钮(如"登录")
-            if len(txt) > 4 and "Microsoft" not in txt and "Sign in" not in txt:
-                if txt not in keywords:
-                    keywords.append(txt)
+        if raw_texts:
+            for txt in raw_texts:
+                txt = txt.strip()
+                # 过滤逻辑
+                if "Microsoft" not in txt and "Sign in" not in txt and "反馈" not in txt:
+                    if txt not in keywords:
+                        keywords.append(txt)
+                        if len(keywords) >= target_count + 5:
+                            break
 
-        print(f"Bing 移动版抓取结果: {len(keywords)} 个词")
+        print(f"Bing 抓取结果: {len(keywords)} 个词")
 
     except Exception as e:
         print(f"Bing 抓取跳过: {e}")
     finally:
-        # 恢复较长的超时时间，保证后续搜索正常
         driver.set_page_load_timeout(20)
 
     # --- 阶段 2: 百度热搜补位 ---
-    if len(keywords) < 10:
+    if len(keywords) < target_count:
         print("关键词不足，切换至百度热搜补位...")
         try:
             driver.get("https://top.baidu.com/board?tab=realtime")
-            # 百度移动端页面结构可能变化，使用通用抓取
             time.sleep(2)
-            elements = driver.find_elements(By.TAG_NAME, "div")  # 百度移动端标题常在 div 中
 
-            for e in elements:
-                txt = e.text.strip()
-                # 百度热搜通常比较长，且不包含换行
-                if len(txt) > 5 and len(txt) < 23 and "\n" not in txt:
-                    if txt not in keywords and "搜索" not in txt:
-                        keywords.append(txt)
-                        if len(keywords) >= 35:
+            # 同样使用 JS 抓取百度，防止百度也报错
+            baidu_texts = driver.execute_script("""
+                var texts = [];
+                // 尝试抓取常见的标题类名或直接抓 div/a
+                var els = document.querySelectorAll('.c-single-text-ellipsis, .content_1YWBm a'); 
+                for (var i = 0; i < els.length; i++) {
+                    texts.push(els[i].innerText);
+                }
+                return texts;
+            """)
+
+            if not baidu_texts:  # 如果上面的选择器没抓到，尝试粗暴抓取
+                baidu_texts = driver.execute_script("""
+                    var texts = [];
+                    var els = document.getElementsByTagName("div");
+                    for (var i = 0; i < els.length; i++) {
+                        texts.push(els[i].innerText);
+                    }
+                    return texts;
+                """)
+
+            for text in baidu_texts:
+                text = text.strip()
+                if len(text) > 5 and len(text) < 23 and "\n" not in text:
+                    if text not in keywords and "搜索" not in text:
+                        keywords.append(text)
+                        if len(keywords) >= target_count + 5:
                             break
         except Exception as e:
             print(f"百度补位异常: {e}")
 
-    # --- 阶段 3: 本地兜底 (绝对稳健) ---
-    if len(keywords) < 23:
-        print("网络抓取受限，使用本地精选词库...")
+    # --- 阶段 3: 本地兜底 (循环补足) ---
+    if len(keywords) < target_count:
+        print("网络抓取受限，使用本地精选词库循环补足...")
         backup = [
             "2024年热门手机排行榜", "杭州亚运会精彩瞬间", "健康减脂食谱推荐",
             "新能源汽车补贴政策", "Python编程入门教程", "适合周末旅游的城市",
@@ -83,17 +112,22 @@ def get_robust_keywords(driver):
             "笔记本电脑性价比", "空气炸锅美食食谱", "练出马甲线的动作",
             "最近比较火的电视剧", "高铁抢票攻略", "世界未解之谜"
         ]
-        for w in backup:
-            if w not in keywords:
-                keywords.append(w)
 
-    # 截取前23个
-    final_keywords = keywords[:23]
-    print(f"最终生成移动端任务: {len(final_keywords)} 个关键词")
+        backup_index = 0
+        while len(keywords) < target_count:
+            word = backup[backup_index % len(backup)]
+            if word not in keywords:
+                keywords.append(word)
+            else:
+                keywords.append(f"{word} {random.randint(1, 100)}")
+            backup_index += 1
+
+    final_keywords = keywords[:target_count]
+    print(f"最终生成任务: {len(final_keywords)} 个关键词")
     return final_keywords
 
 
-def mobile():
+def mobile(search_num):
     # --- 1. 配置 Edge 移动端模拟 ---
     mobile_emulation = {"deviceName": "iPhone X"}
 
@@ -122,11 +156,12 @@ def mobile():
     wait = WebDriverWait(driver, 10)
 
     try:
-        # --- 2. 获取关键词 ---
-        keywords = get_robust_keywords(driver)
+        # --- 2. 获取关键词 (传入用户设定的数量) ---
+        keywords = get_robust_keywords(driver, search_num)
+        real_count = len(keywords)
 
         # --- 3. 循环搜索 ---
-        for i in range(1, 24):
+        for i in range(1, real_count + 1):
             kw = keywords[i - 1]
 
             try:
@@ -134,10 +169,9 @@ def mobile():
                 driver.get("https://www.bing.com")
             except TimeoutException:
                 # 如果 Bing 首页加载超时，强制停止并尝试继续操作
-                # print("首页加载超时，尝试直接搜索...")
                 driver.execute_script("window.stop();")
             except Exception as e:
-                print(f"[{i}/23] 连接错误: {e}")
+                print(f"[{i}/{real_count}] 连接错误: {e}")
                 continue
 
             try:
@@ -149,10 +183,10 @@ def mobile():
                 search_box.send_keys(kw)
                 time.sleep(0.1)
                 search_box.send_keys(Keys.ENTER)
-                print(f"[{i}/23] 移动端搜索：{kw}")
+                print(f"[{i}/{real_count}] 移动端搜索：{kw}")
 
             except Exception as e:
-                print(f"[{i}/23] 搜索框定位失败: {e}")
+                print(f"[{i}/{real_count}] 搜索框定位失败: {e}")
                 continue
 
             # --- 4. 模拟移动端浏览与滑动 ---
@@ -180,4 +214,16 @@ def mobile():
 
 
 if __name__ == "__main__":
-    mobile()
+    # 获取用户输入
+    try:
+        user_input = input("请输入移动端自动抓取并搜索的次数 (n): ")
+        n = int(user_input)
+        if n <= 0:
+            print("请输入大于0的整数，默认执行20次。")
+            n = 20
+    except ValueError:
+        print("输入无效，默认执行 20 次。")
+        n = 20
+
+    print(f"任务开始：即将执行 {n} 次移动端搜索...")
+    mobile(n)
