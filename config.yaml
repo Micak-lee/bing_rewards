@@ -1,0 +1,31 @@
+# Microsoft Rewards Auto-Farming Configuration
+
+browser:
+  channel: "msedge"        # "msedge", "chrome", "chromium"
+  headless: false          # true = no visible window
+  viewport:
+    width: 1280
+    height: 800
+  locale: "zh-CN"
+
+search:
+  pc_count: 30             # PC searches per run
+  mobile_count: 20         # Mobile searches per run
+  min_delay: 3.0           # Min seconds between searches
+  max_delay: 8.0           # Max seconds between searches
+  search_base_url: "https://www.bing.com/search"
+  query_language: "mix"    # "zh", "en", "mix"
+
+activities:
+  enabled: true
+  poll_choice: "random"    # "random", "first", "last"
+  quiz_search_delay: 2.5
+  max_quiz_retries: 2
+  more_activities_timeout: 30
+
+behavior:
+  max_retries: 3
+  retry_delay: 5.0
+  save_state_on_exit: true
+  state_file: "auth_state.json"
+  log_level: "INFO"

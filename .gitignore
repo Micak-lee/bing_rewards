@@ -1,3 +1,27 @@
-edgedriver_win64/
-.idea/
+# Python
 __pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+
+# Browser data (contains cookies/sessions)
+.msrewards_browser_data/
+auth_state.json
+
+# Logs
+rewards.log
+rewards.log.*
+
+# Screenshots (debug)
+screenshots/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

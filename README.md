@@ -1,72 +1,85 @@
-# Bing Search Automation for Microsoft Rewards
-A robust all-in-one Python automation tool designed to perform daily Bing searches on **PC** and **Mobile** modes automatically. This project helps automate the process of earning Microsoft Rewards points by simulating human-like browsing behavior.
+# Microsoft Rewards Auto-Farming
 
-With the new `main.py`, you can complete both desktop and mobile search quotas in a single run.
+自动完成 Microsoft Rewards 积分任务，包括 Bing 搜索和每日活动。
 
-## 🚀 Features
-* **One-Click Automation:** Runs both PC and Mobile search tasks sequentially via `main.py`.
-* **Real-time Trending Keywords:** Automatically fetches current trending topics from **Bing News** and **Baidu Hot Search** to ensure search queries look natural (no repeated static words).
-* **Smart Fallback:** If network scraping fails, it automatically switches to a robust internal keyword list.
-* **Human Simulation:** Includes random intervals (5-10s), page scrolling, and mouse simulated movements to avoid bot detection.
-* **Stability:** Optimized with "Eager" loading strategies and timeout protection to prevent hanging on slow-loading pages.
+## 功能
 
-## 🛠️ Prerequisites
-* **Python 3.x** installed on your system.
-* **Microsoft Edge** browser installed.
+- **Bing PC 搜索** — 模拟桌面端搜索获取积分
+- **Bing 移动端搜索** — 伪造手机 User-Agent 获取移动端积分
+- **每日活动** — 自动完成投票(poll)、测验(quiz)和更多活动(more activities)
+- **测验答题** — 通过 Bing 搜索题干自动查找答案
+- **登录持久化** — 首次手动登录后，后续运行自动登录
+- **可见浏览器** — Edge 浏览器窗口可见，随时了解运行状态
+- **反检测** — 随机延迟、`navigator.webdriver` 隐藏、移除自动化横幅
 
-## 📥 Installation & Setup
-### 1. Clone or Download this repository
-Download the source code to a local folder.
+## 安装
 
-### 2. Install Dependencies
-Open your terminal/command prompt and run:
+```powershell
+# 1. 克隆仓库
+git clone git@github.com:Micak-lee/bing_rewards.git
+cd bing_rewards
 
-```bash
-pip install selenium
+# 2. 安装依赖
+pip install -r requirements.txt
+
+# 3. 安装 Chromium 浏览器
+python -m playwright install chromium
 ```
 
-### 3. Download the Matching Edge Driver (⚠️ CRITICAL)
-**This is the most important step.** You must download the `msedgedriver` that **exactly matches** your current Microsoft Edge browser version.
+## 使用
 
-1. Open Microsoft Edge.
-2. Go to `Settings` -> `About Microsoft Edge` (or type `edge://settings/help` in the address bar).
-3. Note the **Version number** (e.g., `131.0.2903.99`).
-4. Visit the [Microsoft Edge Driver Official Download Page](https://developer.microsoft.com/en-us/microsoft-edge/tools/webdriver/).
-5. Find the version that matches yours and download the **x64** (for Windows 64-bit) zip file.
-6. Unzip the file and place `msedgedriver.exe` into the `edgedriver_win64/` folder in this project directory.
-
-> **Note:** If your Edge browser updates automatically in the future, you may need to download the new driver version again if the script stops working.
-
-## 📂 Project Structure
-Ensure your folder looks like this:
-
-```text
-├── edgedriver_win64/
-│   └── msedgedriver.exe    <-- Your downloaded driver goes here
-├── main.py                 <-- The main entry point
-├── pc.py                   <-- Module for PC searches
-├── mobile.py               <-- Module for Mobile searches
-└── README.md
-
-```
-
-## 🏃‍♂️ Usage
-You only need to run one file. The script will first execute the PC searches, then automatically switch to Mobile emulation.
-
-### Run the full automation:
-```bash
+```powershell
 python main.py
 ```
 
-*(Optional)* If you want to run them individually:
+**首次运行：**
+1. Edge 浏览器窗口会自动打开
+2. 手动登录你的 Microsoft 账号
+3. 回到命令行按 ENTER 继续
+4. 程序自动执行搜索和每日活动
 
-* PC only: `python pc.py`
-* Mobile only: `python mobile.py`
+**后续运行：** 自动登录，无需手动操作。
 
-## 📝 How it Works
-1. **PC Phase:** The script launches Edge on desktop mode, scrapes 30 real-time keywords, and performs the searches with random scrolling and pauses.
-2. **Mobile Phase:** Once PC searches are done, it relaunches Edge in "iPhone X" emulation mode and repeats the process for mobile points.
-3. **Completion:** The browser closes automatically after all tasks are finished.
+## 配置
 
-## ⚠️ Disclaimer
-This script is for educational purposes only. Using automation tools to earn Microsoft Rewards points may violate Microsoft's Terms of Service. Use this tool at your own risk. The author is not responsible for any banned accounts.
+编辑 `config.yaml` 根据需要调整参数：
+
+```yaml
+search:
+  pc_count: 30          # PC 搜索次数
+  mobile_count: 20      # 移动端搜索次数
+  min_delay: 3.0        # 搜索最小间隔（秒）
+  max_delay: 8.0        # 搜索最大间隔（秒）
+
+activities:
+  enabled: true         # 是否执行每日活动
+  poll_choice: "random" # 投票选项：random/first/last
+
+browser:
+  channel: "msedge"     # 浏览器：msedge/chrome/chromium
+  headless: false       # 是否无头模式
+```
+
+## 文件结构
+
+```
+bing_rewards/
+├── main.py              # 主入口
+├── config.yaml          # 配置文件
+├── config.py            # 配置加载
+├── browser.py           # 浏览器管理（持久化登录）
+├── search.py            # Bing 搜索（PC + 移动端）
+├── dashboard.py         # Rewards 面板交互
+├── activities.py        # 每日活动处理
+├── queries.py           # 随机搜索词生成
+├── logger.py            # 日志模块
+├── utils.py             # 工具函数
+├── requirements.txt     # 依赖
+└── queries/
+    ├── zh_keywords.txt  # 中文关键词库
+    └── en_keywords.txt  # 英文关键词库
+```
+
+## 免责声明
+
+本项目仅供学习交流使用。自动获取 Microsoft Rewards 积分可能违反微软服务条款，使用风险自负。建议使用小号测试，避免主账号受到影响。
