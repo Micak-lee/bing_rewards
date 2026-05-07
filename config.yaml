@@ -23,6 +23,15 @@ activities:
   max_quiz_retries: 2
   more_activities_timeout: 30
 
+mobile_app:
+  enabled: true                     # 通过 ADB 连接真实 Android 手机
+  adb_path: "adb"                    # ADB 路径
+  device_serial: ""                  # 留空自动选择第一个设备（adb devices 查看）
+  read_article_count: 30             # 每次运行阅读的文章数量
+  scroll_delay: 3.0                  # 每次滑动间隔（秒）
+  read_dwell_time: 3                # 每篇文章内停留时间（秒）
+  read_scrolls_per_article: 3        # 每篇文章内上下滑动次数
+
 behavior:
   max_retries: 3
   retry_delay: 5.0

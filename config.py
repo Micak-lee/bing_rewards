@@ -35,6 +35,17 @@ class ActivitiesConfig:
 
 
 @dataclass
+class MobileAppConfig:
+    enabled: bool = False
+    adb_path: str = "adb"
+    device_serial: str = ""
+    read_article_count: int = 10
+    scroll_delay: float = 3.0
+    read_dwell_time: float = 10.0
+    read_scrolls_per_article: int = 3
+
+
+@dataclass
 class BehaviorConfig:
     max_retries: int = 3
     retry_delay: float = 5.0
@@ -48,6 +59,7 @@ class Config:
     browser: BrowserConfig = field(default_factory=BrowserConfig)
     search: SearchConfig = field(default_factory=SearchConfig)
     activities: ActivitiesConfig = field(default_factory=ActivitiesConfig)
+    mobile_app: MobileAppConfig = field(default_factory=MobileAppConfig)
     behavior: BehaviorConfig = field(default_factory=BehaviorConfig)
 
 

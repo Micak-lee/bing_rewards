@@ -5,12 +5,15 @@ Automates earning Microsoft Rewards points via:
   1. Bing PC searches
   2. Bing mobile searches (UA spoofing)
   3. Daily activities (poll, quiz, more activities)
+  4. Bing mobile app "Read to Earn" via ADB phone connection
 
 Usage:
-  python main.py
+  python main.py                    # 完整流程（搜索 + 活动 + 阅读）
+  python main.py --read-only        # 仅执行手机"阅读以赚取"
+  python main.py --no-read          # 跳过"阅读以赚取"，只做搜索+活动
 
 First run: browser opens, log into your Microsoft account, press ENTER.
-Subsequent runs: auto-login via persistent browser data in ~/.msrewards_browser_data/
+Phone setup: run `python phone_setup.py` first to check ADB connection.
 """
 import sys
 from pathlib import Path
@@ -22,6 +25,7 @@ from queries import QueryGenerator
 from search import SearchEngine
 from dashboard import Dashboard
 from activities import ActivityHandler
+from mobile_app import AndroidEmulator
 
 
 def ensure_login(dashboard: Dashboard, browser_manager: BrowserManager) -> bool:
@@ -65,6 +69,59 @@ def print_banner() -> None:
     print(banner)
 
 
+def prompt_search_counts(config: Config) -> tuple[int, int]:
+    """Prompt user for PC and mobile search counts.
+
+    Returns (pc_count, mobile_count). User can press Enter to use config defaults.
+    """
+    log = get_logger()
+
+    print()
+    print("─" * 50)
+    print("  Bing 搜索次数设置")
+    print("─" * 50)
+
+    pc_default = config.search.pc_count
+    mobile_default = config.search.mobile_count
+
+    try:
+        pc_input = input(f"  PC 搜索次数 [默认 {pc_default}]: ").strip()
+        pc_count = int(pc_input) if pc_input else pc_default
+
+        mobile_input = input(f"  移动端搜索次数 [默认 {mobile_default}]: ").strip()
+        mobile_count = int(mobile_input) if mobile_input else mobile_default
+    except (KeyboardInterrupt, EOFError):
+        log.info("Input cancelled, using config defaults")
+        return pc_default, mobile_default
+    except ValueError:
+        log.warning("Invalid input, using config defaults")
+        return pc_default, mobile_default
+
+    print("─" * 50)
+    print()
+    return pc_count, mobile_count
+
+
+def run_read_to_earn_only(config: Config) -> bool:
+    """仅执行手机 Bing app '阅读以赚取'，跳过搜索和每日活动。"""
+    log = get_logger()
+    log.info("Read-Only 模式: 仅执行手机 Bing app '阅读以赚取'")
+
+    if not config.mobile_app.enabled:
+        log.error("config.yaml 中 mobile_app.enabled 未设为 true")
+        return False
+
+    emulator = AndroidEmulator(
+        adb_path=config.mobile_app.adb_path,
+        device_serial=config.mobile_app.device_serial,
+        read_article_count=config.mobile_app.read_article_count,
+        scroll_delay=config.mobile_app.scroll_delay,
+        read_dwell_time=config.mobile_app.read_dwell_time,
+        read_scrolls_per_article=config.mobile_app.read_scrolls_per_article,
+    )
+    return emulator.run_read_to_earn()
+
+
 def main() -> None:
     """Main entry point."""
     print_banner()
@@ -76,7 +133,10 @@ def main() -> None:
     log = setup_logger(config.behavior.log_level)
     log.info("Starting Microsoft Rewards Auto-Farming")
 
-    # 3. Load query banks
+    # 3. Prompt for search counts (override config)
+    pc_count, mobile_count = prompt_search_counts(config)
+
+    # 4. Load query banks
     log.info("Loading search keywords...")
     qg = QueryGenerator.from_files()
     log.info(
@@ -101,26 +161,28 @@ def main() -> None:
 
         # 7. PC searches
         search_handler = SearchEngine(page, config)
-        if config.search.pc_count > 0:
+        if pc_count > 0:
             pc_queries = qg.generate_batch(
-                config.search.pc_count, config.search.query_language
+                pc_count, config.search.query_language
             )
             pc_done = search_handler.do_pc_searches(pc_queries)
-            log.info(f"PC searches: {pc_done}/{config.search.pc_count} successful")
+            log.info(f"PC searches: {pc_done}/{pc_count} successful")
         else:
-            log.info("PC searches disabled (count=0)")
+            pc_done = 0
+            log.info("PC searches skipped (count=0)")
 
         # 8. Mobile searches
-        if config.search.mobile_count > 0:
+        if mobile_count > 0:
             mobile_queries = qg.generate_batch(
-                config.search.mobile_count, config.search.query_language
+                mobile_count, config.search.query_language
             )
             mobile_done = search_handler.do_mobile_searches(mobile_queries)
             log.info(
-                f"Mobile searches: {mobile_done}/{config.search.mobile_count} successful"
+                f"Mobile searches: {mobile_done}/{mobile_count} successful"
             )
         else:
-            log.info("Mobile searches disabled (count=0)")
+            mobile_done = 0
+            log.info("Mobile searches skipped (count=0)")
 
         # 9. Daily activities
         activity_results = {"poll": False, "quizzes": 0, "more": 0}
@@ -139,16 +201,39 @@ def main() -> None:
         else:
             log.info("No activities available or activities disabled")
 
-        # 10. Report final points
+        # 10. Mobile app: Read to Earn (via ADB phone connection)
+        read_earn_ok = False
+        if "--no-read" in sys.argv:
+            log.info("Mobile app 'Read to Earn' skipped (--no-read)")
+        elif config.mobile_app.enabled:
+            log.info("Starting Bing mobile app 'Read to Earn'...")
+            emulator = AndroidEmulator(
+                adb_path=config.mobile_app.adb_path,
+                device_serial=config.mobile_app.device_serial,
+                read_article_count=config.mobile_app.read_article_count,
+                scroll_delay=config.mobile_app.scroll_delay,
+                read_dwell_time=config.mobile_app.read_dwell_time,
+                read_scrolls_per_article=config.mobile_app.read_scrolls_per_article,
+            )
+            read_earn_ok = emulator.run_read_to_earn()
+            if read_earn_ok:
+                log.info("Read to Earn completed")
+            else:
+                log.warning("Read to Earn encountered issues")
+        else:
+            log.info("Mobile app 'Read to Earn' disabled")
+
+        # 11. Report final points
         dash.navigate()
         points_after = dash.get_points_info()
         earned = points_after.available - points_before.available
         task_summary = (
-            f"PC searches={pc_done if config.search.pc_count > 0 else 'skipped'}, "
-            f"Mobile searches={mobile_done if config.search.mobile_count > 0 else 'skipped'}, "
+            f"PC searches={pc_done}/{pc_count}, "
+            f"Mobile searches={mobile_done}/{mobile_count}, "
             f"Poll={'OK' if activity_results['poll'] else 'N/A'}, "
             f"Quizzes={activity_results['quizzes']}, "
-            f"More={activity_results['more']}"
+            f"More={activity_results['more']}, "
+            f"ReadToEarn={'OK' if read_earn_ok else 'N/A'}"
         )
         log.info("=" * 60)
         log.info(f"POINTS EARNED THIS SESSION: {earned}")
@@ -166,4 +251,10 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    if "--read-only" in sys.argv:
+        config = load_config(Path("config.yaml"))
+        setup_logger(config.behavior.log_level)
+        ok = run_read_to_earn_only(config)
+        sys.exit(0 if ok else 1)
+    else:
+        main()
