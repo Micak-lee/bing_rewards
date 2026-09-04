@@ -26,6 +26,7 @@ from search import SearchEngine
 from dashboard import Dashboard
 from activities import ActivityHandler
 from mobile_app import AndroidEmulator
+from hot_searches import fetch_hot_searches, get_search_config_hint
 
 
 def ensure_login(dashboard: Dashboard, browser_manager: BrowserManager) -> bool:
@@ -122,6 +123,18 @@ def run_read_to_earn_only(config: Config) -> bool:
     return emulator.run_read_to_earn()
 
 
+def _build_search_queries(
+    count: int, hot_queries: list[str], qg: QueryGenerator, config: Config
+) -> list[str]:
+    """Build search query list — prefer hot queries, fall back to generated."""
+    if hot_queries:
+        queries = []
+        for i in range(count):
+            queries.append(hot_queries[i % len(hot_queries)])
+        return queries
+    return qg.generate_batch(count, config.search.query_language)
+
+
 def main() -> None:
     """Main entry point."""
     print_banner()
@@ -136,14 +149,25 @@ def main() -> None:
     # 3. Prompt for search counts (override config)
     pc_count, mobile_count = prompt_search_counts(config)
 
-    # 4. Load query banks
+    # 4. Fetch hot/trending searches for natural-looking queries
+    log.info("Fetching today's hot searches...")
+    hot_queries = fetch_hot_searches(
+        source=config.search.query_language if config.search.query_language in ("bing", "baidu") else "auto",
+        max_count=max(pc_count, mobile_count),
+    )
+    if hot_queries:
+        log.info(f"Using {len(hot_queries)} real hot search queries")
+    else:
+        log.info("Hot search fetch failed — will use generated keywords instead")
+
+    # 5. Load query banks (fallback if hot searches unavailable)
     log.info("Loading search keywords...")
     qg = QueryGenerator.from_files()
     log.info(
         f"Loaded {len(qg.zh_keywords)} Chinese + {len(qg.en_keywords)} English keywords"
     )
 
-    # 4. Launch browser
+    # 6. Launch browser
     bm = BrowserManager(config)
     bm.launch()
     page = bm.new_page()
@@ -162,9 +186,7 @@ def main() -> None:
         # 7. PC searches
         search_handler = SearchEngine(page, config)
         if pc_count > 0:
-            pc_queries = qg.generate_batch(
-                pc_count, config.search.query_language
-            )
+            pc_queries = _build_search_queries(pc_count, hot_queries, qg, config)
             pc_done = search_handler.do_pc_searches(pc_queries)
             log.info(f"PC searches: {pc_done}/{pc_count} successful")
         else:
@@ -173,9 +195,7 @@ def main() -> None:
 
         # 8. Mobile searches
         if mobile_count > 0:
-            mobile_queries = qg.generate_batch(
-                mobile_count, config.search.query_language
-            )
+            mobile_queries = _build_search_queries(mobile_count, hot_queries, qg, config)
             mobile_done = search_handler.do_mobile_searches(mobile_queries)
             log.info(
                 f"Mobile searches: {mobile_done}/{mobile_count} successful"
