@@ -1,0 +1,68 @@
+﻿2026-10-01 00:15:44 === START (PC=30, Mobile=0, target=C:\Users\Musle\Documents\deepseek-harness\default-workspace\probe_input.py) ===
+2026-10-01 00:15:44 python: C:\Users\Musle\anaconda3\python.exe
+prompt1> prompt2> PROBE RESULT: ['30', '0']
+2026-10-01 00:15:44 === END (exit code 0) ===
+2026-10-01 00:17:01 === START (PC=30, Mobile=0, target=C:\Users\Musle\Documents\deepseek-harness\default-workspace\probe_input.py) ===
+2026-10-01 00:17:01 python: C:\Users\Musle\anaconda3\python.exe
+prompt1> prompt2> PROBE RESULT: ['30', '0']
+2026-10-01 00:17:02 === END (exit code 0) ===
+2026-10-01 00:25:15 === START (PC=30, Mobile=0, target=main.py) ===
+2026-10-01 00:25:15 python: C:\Users\Musle\anaconda3\python.exe
+2026-10-01 00:25:15 DRY-RUN: "C:\Users\Musle\anaconda3\python.exe" -u "D:\new_bing\main.py"   stdin = 30 | 0 |  | 
+2026-10-01 08:00:02 === START (PC=30, Mobile=0, target=main.py) ===
+2026-10-01 08:00:02 python: C:\Users\Musle\anaconda3\python.exe
+
+╔══════════════════════════════════════════╗
+║     Microsoft Rewards Auto-Farming       ║
+║        Bing Search + Daily Activities     ║
+╚══════════════════════════════════════════╝
+
+2026-10-01 08:00:03 [INFO] Starting Microsoft Rewards Auto-Farming
+
+──────────────────────────────────────────────────
+  Bing 搜索次数设置
+──────────────────────────────────────────────────
+  PC 搜索次数 [默认 30]:   移动端搜索次数 [默认 20]: ──────────────────────────────────────────────────
+
+2026-10-01 08:00:03 [INFO] Fetching today's hot searches...
+2026-10-01 08:00:03 [INFO] Fetching Bing trending searches...
+2026-10-01 08:00:03 [INFO] No Bing trending found, falling back to Baidu...
+2026-10-01 08:00:03 [INFO] Fetching Baidu hot searches...
+2026-10-01 08:00:03 [INFO] Got 30 Baidu hot searches
+2026-10-01 08:00:03 [INFO] Total hot searches obtained: 30
+2026-10-01 08:00:03 [INFO] Using 30 real hot search queries
+2026-10-01 08:00:03 [INFO] Loading search keywords...
+2026-10-01 08:00:03 [INFO] Loaded 273 Chinese + 244 English keywords
+2026-10-01 08:00:03 [INFO] Starting Playwright browser...
+2026-10-01 08:00:09 [INFO] Browser launched successfully
+2026-10-01 08:00:18 [INFO] Already logged in
+2026-10-01 08:00:18 [INFO] Current available points: 0
+2026-10-01 08:00:33 [WARNING] Daily set discovery failed: Page.wait_for_selector: Timeout 15000ms exceeded.
+Call log:
+  - waiting for locator("mee-card") to be visible
+
+2026-10-01 08:00:33 [INFO] Daily set: poll=False, quizzes=0, more_activities=0
+2026-10-01 08:00:33 [INFO] Starting 30 PC searches...
+2026-10-01 08:00:53 [INFO] PC search progress: 5/30
+2026-10-01 08:01:28 [INFO] PC search progress: 10/30
+2026-10-01 08:01:58 [INFO] PC search progress: 15/30
+2026-10-01 08:02:27 [INFO] PC search progress: 20/30
+2026-10-01 08:02:55 [INFO] PC search progress: 25/30
+2026-10-01 08:03:20 [INFO] PC search progress: 30/30
+2026-10-01 08:03:20 [INFO] PC searches completed: 30/30
+2026-10-01 08:03:20 [INFO] PC searches: 30/30 successful
+2026-10-01 08:03:20 [INFO] Mobile searches skipped (count=0)
+2026-10-01 08:03:20 [INFO] No activities available or activities disabled
+2026-10-01 08:03:20 [INFO] Starting Bing mobile app 'Read to Earn'...
+2026-10-01 08:03:22 [ERROR] No Android device detected.
+2026-10-01 08:03:22 [WARNING] Read to Earn encountered issues
+2026-10-01 08:03:28 [INFO] Current available points: 0
+2026-10-01 08:03:28 [INFO] ============================================================
+2026-10-01 08:03:28 [INFO] POINTS EARNED THIS SESSION: 0
+2026-10-01 08:03:28 [INFO] TOTAL POINTS: 0
+2026-10-01 08:03:28 [INFO] TASKS: PC searches=30/30, Mobile searches=0/0, Poll=N/A, Quizzes=0, More=0, ReadToEarn=N/A
+2026-10-01 08:03:28 [INFO] ============================================================
+2026-10-01 08:03:28 [INFO] Auth state saved to auth_state.json
+2026-10-01 08:03:29 [INFO] Browser closed
+2026-10-01 08:03:29 [INFO] Session ended
+2026-10-01 08:03:31 === END (exit code 0) ===

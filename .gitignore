@@ -25,3 +25,8 @@ screenshots/
 # OS
 .DS_Store
 Thumbs.db
+
+# JAVA
+.android-sdk/
+.gradle-home/
+.toolchain/
